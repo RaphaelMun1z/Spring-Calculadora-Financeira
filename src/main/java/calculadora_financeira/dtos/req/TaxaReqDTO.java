@@ -1,5 +1,6 @@
 package calculadora_financeira.dtos.req;
 
+import calculadora_financeira.enums.UnidadeTempoEnum;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
@@ -16,6 +17,9 @@ public record TaxaReqDTO(
 
         @NotNull(message = "n não pode ser null.")
         @Positive(message = "n deve ser maior que zero.")
-        BigDecimal n
+        BigDecimal n,
+
+        @NotNull(message = "Unidade de tempo não pode ser null.")
+        UnidadeTempoEnum unidadeTempoEnum
 ) {
 }

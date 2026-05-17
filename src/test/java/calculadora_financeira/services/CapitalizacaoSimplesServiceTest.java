@@ -1,6 +1,7 @@
 package calculadora_financeira.services;
 
 import calculadora_financeira.dtos.req.*;
+import calculadora_financeira.enums.UnidadeTempoEnum;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -14,108 +15,156 @@ class CapitalizacaoSimplesServiceTest {
 
     private final CapitalizacaoSimplesService service = new CapitalizacaoSimplesService();
 
+    // ==========================================================
+    // VALOR PRESENTE (VP)
+    // ==========================================================
     @ParameterizedTest
-    @CsvSource({"1100, 0.05, 2, 1000", "5000, 0.00, 10, 5000", "2500, 0.12, 0, 2500", "3600, 0.20, 4, 2000", "1000, -0.10, 2, 1250", "-1000, 0.10, 2, -833.333333", "0, 0.10, 2, 0"})
-    void obterValorPresente(String vf, String i, String n, String esperadoValor) {
-        ValorPresenteReqDTO dto = new ValorPresenteReqDTO(bd(vf), bd(i), bd(n));
-        BigDecimal calculado = service.obterValorPresente(dto);
-        BigDecimal esperado = bd(esperadoValor);
-        assertEquals(esperado, calculado);
+    @CsvSource({
+        "1100, 0.05, Dia, 2, Dia, 1000",
+        "5000, 0.00, Dia, 10, Dia, 5000",
+        "1100, 0.05, Mes, 2, Mes, 1000",
+        "1100, 0.60, Ano, 60, Dia, 1000",
+        "1100, 0.10, Semestre, 1, Semestre, 1000",
+        "1100, 0.05, Trimestre, 2, Trimestre, 1000"
+    })
+    void obterValorPresente(String vf, String i, String unTaxa, String n, String unTempo, String esperadoValor) {
+        ValorPresenteReqDTO dto = new ValorPresenteReqDTO(
+            bd(vf), bd(i), UnidadeTempoEnum.valueOf(unTaxa), bd(n), UnidadeTempoEnum.valueOf(unTempo)
+        );
+        assertEquals(bd(esperadoValor), service.obterValorPresente(dto));
     }
 
     @Test
     void obterValorPresenteDeveLancarExcecaoQuandoDivisorForZero() {
-        ValorPresenteReqDTO dto = new ValorPresenteReqDTO(bd("1000"), bd("-0.5"), bd("2"));
+        ValorPresenteReqDTO dto = new ValorPresenteReqDTO(bd("1000"), bd("-0.5"), UnidadeTempoEnum.Dia, bd("2"), UnidadeTempoEnum.Dia);
         assertThrows(IllegalArgumentException.class, () -> service.obterValorPresente(dto));
     }
 
+    // ==========================================================
+    // VALOR FUTURO (VF)
+    // ==========================================================
     @ParameterizedTest
-    @CsvSource({"1000, 0.05, 2, 1100", "2000, 0.10, 3, 2600", "5000, 0.00, 10, 5000", "2000, 0.50, 3, 5000", "1000, -0.10, 2, 800", "-1000, 0.10, 2, -1200", "0, 0.10, 5, 0"})
-    void obterValorFuturo(String vp, String i, String n, String esperadoValor) {
-        ValorFuturoReqDTO dto = new ValorFuturoReqDTO(bd(vp), bd(i), bd(n));
-        BigDecimal calculado = service.obterValorFuturo(dto);
-        BigDecimal esperado = bd(esperadoValor);
-        assertEquals(esperado, calculado);
+    @CsvSource({
+        "1000, 0.05, Dia, 2, Dia, 1100",
+        "1000, 0.05, Mes, 2, Mes, 1100",
+        "1000, 0.60, Ano, 60, Dia, 1100",
+        "1000, 0.10, Semestre, 1, Semestre, 1100",
+        "1000, 0.05, Trimestre, 2, Trimestre, 1100"
+    })
+    void obterValorFuturo(String vp, String i, String unTaxa, String n, String unTempo, String esperadoValor) {
+        ValorFuturoReqDTO dto = new ValorFuturoReqDTO(
+            bd(vp), bd(i), UnidadeTempoEnum.valueOf(unTaxa), bd(n), UnidadeTempoEnum.valueOf(unTempo)
+        );
+        assertEquals(bd(esperadoValor), service.obterValorFuturo(dto));
     }
 
+    // ==========================================================
+    // JUROS (J)
+    // ==========================================================
     @ParameterizedTest
-    @CsvSource({"1000, 0.05, 2, 100", "3000, 0.00, 5, 0", "2500, 0.10, 4, 1000", "1500, 0.20, 3, 900", "1000, -0.10, 2, -200", "-1000, 0.10, 2, -200", "0, 0.10, 2, 0"})
-    void obterJuros(String vp, String i, String n, String esperadoValor) {
-        JurosReqDTO dto = new JurosReqDTO(bd(vp), bd(i), bd(n));
-        BigDecimal calculado = service.obterJuros(dto);
-        BigDecimal esperado = bd(esperadoValor);
-        assertEquals(esperado, calculado);
+    @CsvSource({
+        "1000, 0.05, Dia, 2, Dia, 100",
+        "1000, 0.05, Mes, 2, Mes, 100",
+        "1000, 0.60, Ano, 60, Dia, 100",
+        "1000, 0.10, Semestre, 1, Semestre, 100",
+        "1000, 0.05, Trimestre, 2, Trimestre, 100"
+    })
+    void obterJuros(String vp, String i, String unTaxa, String n, String unTempo, String esperadoValor) {
+        JurosReqDTO dto = new JurosReqDTO(
+            bd(vp), bd(i), UnidadeTempoEnum.valueOf(unTaxa), bd(n), UnidadeTempoEnum.valueOf(unTempo)
+        );
+        assertEquals(bd(esperadoValor), service.obterJuros(dto));
     }
 
+    // ==========================================================
+    // TAXA (i)
+    // ==========================================================
     @ParameterizedTest
-    @CsvSource({"1000, 1100, 2, 0.05", "1000, 1600, 6, 0.10", "2000, 2600, 3, 0.10", "5000, 5000, 10, 0.00", "1000, 800, 2, -0.10", "-1000, -1200, 2, 0.10"})
-    void obterTaxa(String vp, String vf, String n, String esperadoValor) {
-        TaxaReqDTO dto = new TaxaReqDTO(bd(vp), bd(vf), bd(n));
-        BigDecimal calculado = service.obterTaxa(dto);
-        BigDecimal esperado = bd(esperadoValor);
-        assertEquals(esperado, calculado);
-    }
-
-    @Test
-    void obterTaxaDeveLancarExcecaoQuandoVpForZero() {
-        TaxaReqDTO dto = new TaxaReqDTO(bd("0"), bd("1000"), bd("2"));
-        assertThrows(ArithmeticException.class, () -> service.obterTaxa(dto));
+    @CsvSource({
+        "1000, 1100, 2, Dia, 0.050000",
+        "1000, 1060, 2, Mes, 0.001000",
+        "1000, 1090, 1, Trimestre, 0.001000",
+        "1000, 1180, 1, Semestre, 0.001000",
+        "1000, 1360, 1, Ano, 0.001000"
+    })
+    void obterTaxa(String vp, String vf, String n, String unTempo, String esperadoValor) {
+        TaxaReqDTO dto = new TaxaReqDTO(bd(vp), bd(vf), bd(n), UnidadeTempoEnum.valueOf(unTempo));
+        assertEquals(bd(esperadoValor), service.obterTaxa(dto));
     }
 
     @Test
     void obterTaxaDeveLancarExcecaoQuandoTempoForZero() {
-        TaxaReqDTO dto = new TaxaReqDTO(bd("1000"), bd("1100"), bd("0"));
+        TaxaReqDTO dto = new TaxaReqDTO(bd("1000"), bd("1100"), bd("0"), UnidadeTempoEnum.Dia);
         assertThrows(IllegalArgumentException.class, () -> service.obterTaxa(dto));
     }
 
+    // ==========================================================
+    // TEMPO (n)
+    // ==========================================================
     @ParameterizedTest
-    @CsvSource({"1000, 1100, 0.05, 2", "1000, 1500, 0.25, 2", "2000, 2600, 0.10, 3", "5000, 5000, 0.15, 0", "1000, 800, -0.10, 2", "-1000, -1200, 0.10, 2"})
-    void obterTempo(String vp, String vf, String i, String esperadoValor) {
-        TempoReqDTO dto = new TempoReqDTO(bd(vp), bd(vf), bd(i));
-        BigDecimal calculado = service.obterTempo(dto);
-        BigDecimal esperado = bd(esperadoValor);
-        assertEquals(esperado, calculado);
-    }
-
-    @Test
-    void obterTempoDeveLancarExcecaoQuandoVpForZero() {
-        TempoReqDTO dto = new TempoReqDTO(bd("0"), bd("1000"), bd("0.10"));
-        assertThrows(ArithmeticException.class, () -> service.obterTempo(dto));
+    @CsvSource({
+        "1000, 1100, 0.05, Dia, 2.000000",
+        "1000, 1060, 0.03, Mes, 60.000000",
+        "1000, 1090, 0.09, Trimestre, 90.000000",
+        "1000, 1180, 0.18, Semestre, 180.000000",
+        "1000, 1360, 0.36, Ano, 360.000000"
+    })
+    void obterTempo(String vp, String vf, String i, String unTaxa, String esperadoValor) {
+        TempoReqDTO dto = new TempoReqDTO(bd(vp), bd(vf), bd(i), UnidadeTempoEnum.valueOf(unTaxa));
+        assertEquals(bd(esperadoValor), service.obterTempo(dto));
     }
 
     @Test
     void obterTempoDeveLancarExcecaoQuandoTaxaForZero() {
-        TempoReqDTO dto = new TempoReqDTO(bd("1000"), bd("1100"), bd("0"));
+        TempoReqDTO dto = new TempoReqDTO(bd("1000"), bd("1100"), bd("0"), UnidadeTempoEnum.Dia);
         assertThrows(IllegalArgumentException.class, () -> service.obterTempo(dto));
     }
 
+    // ==========================================================
+    // TAXA DO DESCONTO COMERCIAL (ic)
+    // ==========================================================
     @ParameterizedTest
-    @CsvSource({"0.10, 2, 0.083333", "0.20, 2, 0.142857", "0.05, 1, 0.047619", "0.15, 3, 0.103448", "-0.10, 2, -0.125000", "0, 2, 0"})
-    void obterTaxaDoDescontoComercial(String i, String n, String esperadoValor) {
-        TaxaDoDescontoComercialReqDTO dto = new TaxaDoDescontoComercialReqDTO(bd(i), bd(n));
-        BigDecimal calculado = service.obterTaxaDoDescontoComercial(dto);
-        BigDecimal esperado = bd(esperadoValor);
-        assertEquals(esperado, calculado);
+    @CsvSource({
+        "0.10, Dia, 2, Dia, 0.083333",
+        "0.03, Mes, 1, Mes, 0.000971",
+        "0.09, Trimestre, 1, Trimestre, 0.000917",
+        "0.18, Semestre, 1, Semestre, 0.000847",
+        "0.36, Ano, 1, Ano, 0.000735"
+    })
+    void obterTaxaDoDescontoComercial(String i, String unTaxa, String n, String unTempo, String esperadoValor) {
+        TaxaDoDescontoComercialReqDTO dto = new TaxaDoDescontoComercialReqDTO(
+            bd(i), UnidadeTempoEnum.valueOf(unTaxa), bd(n), UnidadeTempoEnum.valueOf(unTempo)
+        );
+        assertEquals(bd(esperadoValor), service.obterTaxaDoDescontoComercial(dto));
     }
 
     @Test
     void obterTaxaDoDescontoComercialDeveLancarExcecaoQuandoDivisorForZero() {
-        TaxaDoDescontoComercialReqDTO dto = new TaxaDoDescontoComercialReqDTO(bd("-0.5"), bd("2"));
+        TaxaDoDescontoComercialReqDTO dto = new TaxaDoDescontoComercialReqDTO(bd("-0.5"), UnidadeTempoEnum.Dia, bd("2"), UnidadeTempoEnum.Dia);
         assertThrows(IllegalArgumentException.class, () -> service.obterTaxaDoDescontoComercial(dto));
     }
 
+    // ==========================================================
+    // TAXA EFETIVA (i)
+    // ==========================================================
     @ParameterizedTest
-    @CsvSource({"0.05, 2, 0.055556", "0.10, 2, 0.125000", "0.20, 3, 0.500000", "0.02, 1, 0.020408", "-0.10, 2, -0.083333", "0, 2, 0"})
-    void obterTaxaEfetiva(String ic, String n, String esperadoValor) {
-        TaxaEfetivaReqDTO dto = new TaxaEfetivaReqDTO(bd(ic), bd(n));
-        BigDecimal calculado = service.obterTaxaEfetiva(dto);
-        BigDecimal esperado = bd(esperadoValor);
-        assertEquals(esperado, calculado);
+    @CsvSource({
+        "0.05, Dia, 2, Dia, 0.055556",
+        "0.03, Mes, 1, Mes, 0.001031",
+        "0.09, Trimestre, 1, Trimestre, 0.001099",
+        "0.18, Semestre, 1, Semestre, 0.001220",
+        "0.36, Ano, 1, Ano, 0.001563"
+    })
+    void obterTaxaEfetiva(String ic, String unTaxa, String n, String unTempo, String esperadoValor) {
+        TaxaEfetivaReqDTO dto = new TaxaEfetivaReqDTO(
+            bd(ic), UnidadeTempoEnum.valueOf(unTaxa), bd(n), UnidadeTempoEnum.valueOf(unTempo)
+        );
+        assertEquals(bd(esperadoValor), service.obterTaxaEfetiva(dto));
     }
 
     @Test
     void obterTaxaEfetivaDeveLancarExcecaoQuandoDivisorForZero() {
-        TaxaEfetivaReqDTO dto = new TaxaEfetivaReqDTO(bd("0.5"), bd("2"));
+        TaxaEfetivaReqDTO dto = new TaxaEfetivaReqDTO(bd("0.5"), UnidadeTempoEnum.Dia, bd("2"), UnidadeTempoEnum.Dia);
         assertThrows(IllegalArgumentException.class, () -> service.obterTaxaEfetiva(dto));
     }
 

@@ -1,6 +1,7 @@
 package calculadora_financeira.services;
 
 import calculadora_financeira.dtos.req.*;
+import calculadora_financeira.enums.UnidadeTempoEnum;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -13,7 +14,10 @@ public class CapitalizacaoSimplesService {
             throw new IllegalArgumentException("DTO não pode ser null");
         }
 
-        BigDecimal divisor = BigDecimal.ONE.add(dto.i().multiply(dto.n()));
+        BigDecimal iConvertido = converterTaxaParaDia(dto.i(), dto.unidadeTaxaJurosEnum());
+        BigDecimal nConvertido = converterTempoParaDia(dto.n(), dto.unidadeTempoEnum());
+
+        BigDecimal divisor = BigDecimal.ONE.add(iConvertido.multiply(nConvertido));
 
         if (divisor.compareTo(BigDecimal.ZERO) == 0) {
             throw new IllegalArgumentException("O divisor não pode ser zero.");
@@ -27,7 +31,10 @@ public class CapitalizacaoSimplesService {
             throw new IllegalArgumentException("DTO não pode ser null");
         }
 
-        return dto.VP().multiply(BigDecimal.ONE.add(dto.i().multiply(dto.n()))).setScale(6, RoundingMode.HALF_UP);
+        BigDecimal iConvertido = converterTaxaParaDia(dto.i(), dto.unidadeTaxaJurosEnum());
+        BigDecimal nConvertido = converterTempoParaDia(dto.n(), dto.unidadeTempoEnum());
+
+        return dto.VP().multiply(BigDecimal.ONE.add(iConvertido.multiply(nConvertido))).setScale(6, RoundingMode.HALF_UP);
     }
 
     public BigDecimal obterJuros(JurosReqDTO dto) {
@@ -35,7 +42,10 @@ public class CapitalizacaoSimplesService {
             throw new IllegalArgumentException("DTO não pode ser null");
         }
 
-        return dto.VP().multiply(dto.i()).multiply(dto.n()).setScale(6, RoundingMode.HALF_UP);
+        BigDecimal iConvertido = converterTaxaParaDia(dto.i(), dto.unidadeTaxaJurosEnum());
+        BigDecimal nConvertido = converterTempoParaDia(dto.n(), dto.unidadeTempoEnum());
+
+        return dto.VP().multiply(iConvertido).multiply(nConvertido).setScale(6, RoundingMode.HALF_UP);
     }
 
     public BigDecimal obterTaxa(TaxaReqDTO dto) {
@@ -43,7 +53,9 @@ public class CapitalizacaoSimplesService {
             throw new IllegalArgumentException("DTO não pode ser null");
         }
 
-        BigDecimal divisor = dto.n().setScale(6, RoundingMode.HALF_UP);
+        BigDecimal nConvertido = converterTempoParaDia(dto.n(), dto.unidadeTempoEnum());
+
+        BigDecimal divisor = nConvertido.setScale(6, RoundingMode.HALF_UP);
 
         if (divisor.compareTo(BigDecimal.ZERO) == 0) {
             throw new IllegalArgumentException("O divisor não pode ser zero.");
@@ -57,7 +69,9 @@ public class CapitalizacaoSimplesService {
             throw new IllegalArgumentException("DTO não pode ser null");
         }
 
-        BigDecimal divisor = dto.i().setScale(6, RoundingMode.HALF_UP);
+        BigDecimal iConvertido = converterTaxaParaDia(dto.i(), dto.unidadeTaxaJurosEnum());
+
+        BigDecimal divisor = iConvertido.setScale(6, RoundingMode.HALF_UP);
 
         if (divisor.compareTo(BigDecimal.ZERO) == 0) {
             throw new IllegalArgumentException("O divisor não pode ser zero.");
@@ -71,13 +85,16 @@ public class CapitalizacaoSimplesService {
             throw new IllegalArgumentException("DTO não pode ser null");
         }
 
-        BigDecimal divisor = BigDecimal.ONE.add(dto.I().multiply(dto.n())).setScale(6, RoundingMode.HALF_UP);
+        BigDecimal iConvertido = converterTaxaParaDia(dto.I(), dto.unidadeTaxaJurosEnum());
+        BigDecimal nConvertido = converterTempoParaDia(dto.n(), dto.unidadeTempoEnum());
+
+        BigDecimal divisor = BigDecimal.ONE.add(iConvertido.multiply(nConvertido)).setScale(6, RoundingMode.HALF_UP);
 
         if (divisor.compareTo(BigDecimal.ZERO) == 0) {
             throw new IllegalArgumentException("O divisor não pode ser zero.");
         }
 
-        return dto.I().divide(divisor, 6, RoundingMode.HALF_UP);
+        return iConvertido.divide(divisor, 6, RoundingMode.HALF_UP);
     }
 
     public BigDecimal obterTaxaEfetiva(TaxaEfetivaReqDTO dto) {
@@ -85,12 +102,33 @@ public class CapitalizacaoSimplesService {
             throw new IllegalArgumentException("DTO não pode ser null");
         }
 
-        BigDecimal divisor = BigDecimal.ONE.subtract(dto.Ic().multiply(dto.n())).setScale(6, RoundingMode.HALF_UP);
+        BigDecimal iConvertido = converterTaxaParaDia(dto.Ic(), dto.unidadeTaxaJurosEnum());
+        BigDecimal nConvertido = converterTempoParaDia(dto.n(), dto.unidadeTempoEnum());
+
+        BigDecimal divisor = BigDecimal.ONE.subtract(iConvertido.multiply(nConvertido)).setScale(6, RoundingMode.HALF_UP);
 
         if (divisor.compareTo(BigDecimal.ZERO) == 0) {
             throw new IllegalArgumentException("O divisor não pode ser zero.");
         }
 
-        return dto.Ic().divide(divisor, 6, RoundingMode.HALF_UP);
+        return iConvertido.divide(divisor, 6, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal converterTempoParaDia(BigDecimal variavel, UnidadeTempoEnum unidadeTempo) {
+        return variavel.multiply(obterDenominador(unidadeTempo)).setScale(6, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal converterTaxaParaDia(BigDecimal variavel, UnidadeTempoEnum unidadeTempo) {
+        return variavel.divide(obterDenominador(unidadeTempo), 16, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal obterDenominador(UnidadeTempoEnum unidadeTempo) {
+        return switch (unidadeTempo) {
+            case UnidadeTempoEnum.Ano -> BigDecimal.valueOf(360);
+            case UnidadeTempoEnum.Semestre -> BigDecimal.valueOf(180);
+            case UnidadeTempoEnum.Trimestre -> BigDecimal.valueOf(90);
+            case UnidadeTempoEnum.Mes -> BigDecimal.valueOf(30);
+            default -> BigDecimal.ONE;
+        };
     }
 }
