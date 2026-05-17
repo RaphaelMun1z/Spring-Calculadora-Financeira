@@ -82,10 +82,10 @@ class CapitalizacaoSimplesServiceTest {
     @ParameterizedTest
     @CsvSource({
         "1000, 1100, 2, Dia, 0.050000",
-        "1000, 1060, 2, Mes, 0.001000",
-        "1000, 1090, 1, Trimestre, 0.001000",
-        "1000, 1180, 1, Semestre, 0.001000",
-        "1000, 1360, 1, Ano, 0.001000"
+        "1000, 1060, 2, Mes, 0.030000",
+        "1000, 1090, 1, Trimestre, 0.090000",
+        "1000, 1180, 1, Semestre, 0.180000",
+        "1000, 1360, 1, Ano, 0.360000"
     })
     void obterTaxa(String vp, String vf, String n, String unTempo, String esperadoValor) {
         TaxaReqDTO dto = new TaxaReqDTO(bd(vp), bd(vf), bd(n), UnidadeTempoEnum.valueOf(unTempo));
@@ -104,10 +104,10 @@ class CapitalizacaoSimplesServiceTest {
     @ParameterizedTest
     @CsvSource({
         "1000, 1100, 0.05, Dia, 2.000000",
-        "1000, 1060, 0.03, Mes, 60.000000",
-        "1000, 1090, 0.09, Trimestre, 90.000000",
-        "1000, 1180, 0.18, Semestre, 180.000000",
-        "1000, 1360, 0.36, Ano, 360.000000"
+        "1000, 1060, 0.03, Mes, 2.000000",
+        "1000, 1090, 0.09, Trimestre, 1.000000",
+        "1000, 1180, 0.18, Semestre, 1.000000",
+        "1000, 1360, 0.36, Ano, 1.000000"
     })
     void obterTempo(String vp, String vf, String i, String unTaxa, String esperadoValor) {
         TempoReqDTO dto = new TempoReqDTO(bd(vp), bd(vf), bd(i), UnidadeTempoEnum.valueOf(unTaxa));
@@ -126,10 +126,10 @@ class CapitalizacaoSimplesServiceTest {
     @ParameterizedTest
     @CsvSource({
         "0.10, Dia, 2, Dia, 0.083333",
-        "0.03, Mes, 1, Mes, 0.000971",
-        "0.09, Trimestre, 1, Trimestre, 0.000917",
-        "0.18, Semestre, 1, Semestre, 0.000847",
-        "0.36, Ano, 1, Ano, 0.000735"
+        "0.03, Mes, 1, Mes, 0.029126",
+        "0.09, Trimestre, 1, Trimestre, 0.082569",
+        "0.18, Semestre, 1, Semestre, 0.152542",
+        "0.36, Ano, 1, Ano, 0.264706"
     })
     void obterTaxaDoDescontoComercial(String i, String unTaxa, String n, String unTempo, String esperadoValor) {
         TaxaDoDescontoComercialReqDTO dto = new TaxaDoDescontoComercialReqDTO(
@@ -150,10 +150,10 @@ class CapitalizacaoSimplesServiceTest {
     @ParameterizedTest
     @CsvSource({
         "0.05, Dia, 2, Dia, 0.055556",
-        "0.03, Mes, 1, Mes, 0.001031",
-        "0.09, Trimestre, 1, Trimestre, 0.001099",
-        "0.18, Semestre, 1, Semestre, 0.001220",
-        "0.36, Ano, 1, Ano, 0.001563"
+        "0.03, Mes, 1, Mes, 0.030928",
+        "0.09, Trimestre, 1, Trimestre, 0.098901",
+        "0.18, Semestre, 1, Semestre, 0.219512",
+        "0.36, Ano, 1, Ano, 0.562500"
     })
     void obterTaxaEfetiva(String ic, String unTaxa, String n, String unTempo, String esperadoValor) {
         TaxaEfetivaReqDTO dto = new TaxaEfetivaReqDTO(

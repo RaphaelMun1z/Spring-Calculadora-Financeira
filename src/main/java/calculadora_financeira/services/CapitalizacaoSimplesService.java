@@ -53,15 +53,13 @@ public class CapitalizacaoSimplesService {
             throw new IllegalArgumentException("DTO não pode ser null");
         }
 
-        BigDecimal nConvertido = converterTempoParaDia(dto.n(), dto.unidadeTempoEnum());
-
-        BigDecimal divisor = nConvertido.setScale(6, RoundingMode.HALF_UP);
+        BigDecimal divisor = dto.n().setScale(6, RoundingMode.HALF_UP);
 
         if (divisor.compareTo(BigDecimal.ZERO) == 0) {
             throw new IllegalArgumentException("O divisor não pode ser zero.");
         }
 
-        return (dto.VF().divide(dto.VP(), 6, RoundingMode.HALF_UP).subtract(BigDecimal.ONE)).divide(divisor, 6, RoundingMode.HALF_UP);
+        return ((dto.VF().divide(dto.VP(), 6, RoundingMode.HALF_UP)).subtract(BigDecimal.ONE)).divide(divisor, 6, RoundingMode.HALF_UP);
     }
 
     public BigDecimal obterTempo(TempoReqDTO dto) {
@@ -69,9 +67,7 @@ public class CapitalizacaoSimplesService {
             throw new IllegalArgumentException("DTO não pode ser null");
         }
 
-        BigDecimal iConvertido = converterTaxaParaDia(dto.i(), dto.unidadeTaxaJurosEnum());
-
-        BigDecimal divisor = iConvertido.setScale(6, RoundingMode.HALF_UP);
+        BigDecimal divisor = dto.i().setScale(6, RoundingMode.HALF_UP);
 
         if (divisor.compareTo(BigDecimal.ZERO) == 0) {
             throw new IllegalArgumentException("O divisor não pode ser zero.");
@@ -94,7 +90,8 @@ public class CapitalizacaoSimplesService {
             throw new IllegalArgumentException("O divisor não pode ser zero.");
         }
 
-        return iConvertido.divide(divisor, 6, RoundingMode.HALF_UP);
+        BigDecimal taxaComercialDiaria = iConvertido.divide(divisor, 16, RoundingMode.HALF_UP);
+        return taxaComercialDiaria.multiply(obterDenominador(dto.unidadeTaxaJurosEnum())).setScale(6, RoundingMode.HALF_UP);
     }
 
     public BigDecimal obterTaxaEfetiva(TaxaEfetivaReqDTO dto) {
@@ -111,7 +108,8 @@ public class CapitalizacaoSimplesService {
             throw new IllegalArgumentException("O divisor não pode ser zero.");
         }
 
-        return iConvertido.divide(divisor, 6, RoundingMode.HALF_UP);
+        BigDecimal taxaEfetivaDiaria = iConvertido.divide(divisor, 16, RoundingMode.HALF_UP);
+        return taxaEfetivaDiaria.multiply(obterDenominador(dto.unidadeTaxaJurosEnum())).setScale(6, RoundingMode.HALF_UP);
     }
 
     private BigDecimal converterTempoParaDia(BigDecimal variavel, UnidadeTempoEnum unidadeTempo) {
